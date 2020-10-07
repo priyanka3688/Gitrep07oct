@@ -1,0 +1,25 @@
+-
+    hosts: all
+    vars:
+        host_ip: 52.16.224.208
+        app_name: petclinic
+        env_name: DOA_Labs_Module3_FOSS_Java_Manual_PROD
+        domain_name: '{{ env_name }}.{{ host_ip }}.xip.io/{{ app_name }}'
+    tasks:
+        -
+            debug: var=domain_name
+        -
+            name: 'Add SSL Directory'
+            file: {path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic', state: directory}
+        -
+            name: 'Generate a Private Key'
+            openssl_privatekey: {path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic/petclinic.pem'}
+            tags: [skip_ansible_lint]
+        -
+            name: 'Generate CSR'
+            openssl_csr: {path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic/petclinic.csr', privatekey_path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic/petclinic.pem', digest: sha512, common_name: petclinic}
+            tags: [skip_ansible_lint]
+        -
+            name: 'Generate a Self Signed OpenSSL certificate'
+            openssl_certificate: {path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic/petclinic.crt', privatekey_path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic/petclinic.pem', csr_path: '{{ lookup(''env'',''PWD'') }}/.ssl/petclinic/petclinic.csr', provider: selfsigned}
+            tags: [skip_ansible_lint]
